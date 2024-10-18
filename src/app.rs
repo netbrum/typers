@@ -60,10 +60,6 @@ impl App {
         while self.state != State::Exit {
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_events()?;
-
-            if self.is_finished() {
-                self.state = State::Finished;
-            }
         }
 
         Ok(())
@@ -139,7 +135,13 @@ impl App {
             State::Playing => match key_event.code {
                 KeyCode::Esc => self.exit(),
                 KeyCode::Tab => self.reset(),
-                KeyCode::Char(c) => self.typed.push(c),
+                KeyCode::Char(c) => {
+                    self.typed.push(c);
+
+                    if self.is_finished() {
+                        self.state = State::Finished;
+                    }
+                }
                 _ => {}
             },
             State::Finished => self.exit(),
