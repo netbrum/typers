@@ -121,12 +121,13 @@ impl App {
         Paragraph::new(accuracy).render(layout[2], frame.buffer_mut());
     }
 
+    #[expect(clippy::cast_possible_truncation)]
     fn playing_screen(&self, frame: &mut Frame) {
         let words = self.words();
 
         let area = center(
             frame.area(),
-            Constraint::Length(words.len().try_into().unwrap()),
+            Constraint::Length(words.len() as u16),
             Constraint::Percentage(100),
         );
 
