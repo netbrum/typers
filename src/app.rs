@@ -85,12 +85,7 @@ impl App {
             .render(area, frame.buffer_mut());
     }
 
-    fn draw(&self, frame: &mut Frame) {
-        if self.state == State::Finished {
-            self.finish_screen(frame);
-            return;
-        }
-
+    fn playing_screen(&self, frame: &mut Frame) {
         let words = self.words();
 
         let area = center(
@@ -128,6 +123,14 @@ impl App {
             .block(block)
             .wrap(Wrap { trim: true })
             .render(area, frame.buffer_mut());
+    }
+
+    fn draw(&self, frame: &mut Frame) {
+        match self.state {
+            State::Playing => self.playing_screen(frame),
+            State::Finished => self.finish_screen(frame),
+            State::Exit => unreachable!(),
+        }
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) {
