@@ -96,20 +96,15 @@ impl App {
 
         let block = Block::new().padding(Padding::top(area.height / 2));
 
-        let mut chars = words.chars();
-
         let typed: Vec<Span> = self
             .typed
             .iter()
-            .filter_map(|c| {
-                // Calling `.nth` on an iterator does not rewind it, so by calling `.nth(0)` we
-                // access the character matching the current iteration.
-                let target = chars.nth(0)?;
-
+            .zip(words.chars())
+            .map(|(c, target)| {
                 if target == *c {
-                    Some(Span::raw(target.to_string()).white())
+                    Span::raw(target.to_string()).white()
                 } else {
-                    Some(Span::raw(target.to_string()).red())
+                    Span::raw(target.to_string()).red()
                 }
             })
             .collect();
