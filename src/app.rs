@@ -24,7 +24,7 @@ enum State {
 }
 
 pub struct App {
-    start: Instant,
+    start: Option<Instant>,
     state: State,
     first_draw: bool,
     args: Args,
@@ -38,7 +38,7 @@ impl App {
         let typed = Vec::with_capacity(words.len());
 
         Self {
-            start: Instant::now(),
+            start: None,
             state: State::Playing,
             first_draw: true,
             args,
@@ -67,7 +67,7 @@ impl App {
 
     #[expect(clippy::cast_precision_loss)]
     fn wpm(&self) -> f64 {
-        let elapsed = self.start.elapsed();
+        let elapsed = self.start.unwrap().elapsed();
         (self.words().len() / 5) as f64 / elapsed.as_secs_f64() * 60.0
     }
 
@@ -86,7 +86,7 @@ impl App {
     }
 
     fn time_ms(&self) -> u128 {
-        let elapsed = self.start.elapsed();
+        let elapsed = self.start.unwrap().elapsed();
         elapsed.as_millis()
     }
 
@@ -191,6 +191,10 @@ impl App {
                 KeyCode::Esc => self.exit(),
                 KeyCode::Tab => self.reset(),
                 KeyCode::Char(c) => {
+                    if self.start.is_none() {
+                        self.start = Some(Instant::now());
+                    }
+
                     self.typed.push(c);
 
                     if self.is_finished() {
