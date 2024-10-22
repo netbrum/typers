@@ -47,7 +47,7 @@ impl App {
 
     fn reset(&mut self) {
         self.words = Words::generate(self.args.words);
-        self.typed = Vec::default();
+        self.typed = Vec::with_capacity(self.words().len());
     }
 
     fn is_finished(&self) -> bool {
