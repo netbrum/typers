@@ -133,7 +133,7 @@ impl App {
 
         let block = Block::new().padding(Padding::top(area.height / 2));
 
-        let typed: Vec<Span> = self
+        let mut typed: Vec<Span> = self
             .typed
             .iter()
             .zip(words.chars())
@@ -146,10 +146,9 @@ impl App {
             })
             .collect();
 
-        Paragraph::new(words.gray())
-            .block(block.clone())
-            .wrap(Wrap { trim: true })
-            .render(area, frame.buffer_mut());
+        typed.push(Span::raw(words[typed.len()..].to_string()));
+
+        let typed: Vec<Span> = typed.into_iter().collect();
 
         Paragraph::new(Line::from(typed))
             .block(block)
