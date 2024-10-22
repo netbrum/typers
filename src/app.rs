@@ -203,7 +203,10 @@ impl App {
                 }
                 _ => {}
             },
-            State::Finished => self.exit(),
+            State::Finished => match key_event.code {
+                KeyCode::Char('q') | KeyCode::Enter => self.exit(),
+                _ => {}
+            },
             State::Exit => unreachable!(),
         }
     }
