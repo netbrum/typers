@@ -1,3 +1,4 @@
+mod timer;
 mod words;
 
 use crate::Args;
@@ -13,7 +14,8 @@ use ratatui::{
     widgets::{Block, BorderType, Padding, Paragraph, Widget, Wrap},
     DefaultTerminal, Frame,
 };
-use std::{io, time::Instant};
+use std::io;
+use timer::Timer;
 use words::Words;
 
 #[derive(PartialEq, Eq)]
@@ -24,7 +26,7 @@ enum State {
 }
 
 pub struct App {
-    start: Option<Instant>,
+    timer: Timer,
     state: State,
     first_draw: bool,
     args: Args,
@@ -38,7 +40,7 @@ impl App {
         let typed = Vec::with_capacity(words.len());
 
         Self {
-            start: None,
+            timer: Timer::default(),
             state: State::Playing,
             first_draw: true,
             args,
@@ -67,7 +69,7 @@ impl App {
 
     #[expect(clippy::cast_precision_loss)]
     fn wpm(&self) -> f64 {
-        let elapsed = self.start.unwrap().elapsed();
+        let elapsed = self.timer.duration();
         (self.words().len() / 5) as f64 / elapsed.as_secs_f64() * 60.0
     }
 
@@ -86,7 +88,7 @@ impl App {
     }
 
     fn time_ms(&self) -> u128 {
-        let elapsed = self.start.unwrap().elapsed();
+        let elapsed = self.timer.duration();
         elapsed.as_millis()
     }
 
@@ -191,14 +193,15 @@ impl App {
                 KeyCode::Esc => self.exit(),
                 KeyCode::Tab => self.reset(),
                 KeyCode::Char(c) => {
-                    if self.start.is_none() {
-                        self.start = Some(Instant::now());
+                    if !self.timer.is_started() {
+                        self.timer.start();
                     }
 
                     self.typed.push(c);
 
                     if self.is_finished() {
                         self.state = State::Finished;
+                        self.timer.end();
                     }
                 }
                 _ => {}
