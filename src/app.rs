@@ -1,9 +1,13 @@
 mod words;
 
 use crate::Args;
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
+use crossterm::{
+    cursor::SetCursorStyle,
+    event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
+    execute,
+};
 use ratatui::{
-    layout::{Constraint, Flex, Layout, Rect},
+    layout::{Constraint, Flex, Layout, Position, Rect},
     style::{Style, Stylize as RatatuiStylize},
     text::{Line, Span},
     widgets::{Block, BorderType, Padding, Paragraph, Widget, Wrap},
@@ -22,6 +26,7 @@ enum State {
 pub struct App {
     start: Instant,
     state: State,
+    first_draw: bool,
     args: Args,
     typed: Vec<char>,
     words: Vec<&'static str>,
@@ -35,6 +40,7 @@ impl App {
         Self {
             start: Instant::now(),
             state: State::Playing,
+            first_draw: true,
             args,
             typed,
             words,
@@ -48,6 +54,7 @@ impl App {
     fn reset(&mut self) {
         self.words = Words::generate(self.args.words);
         self.typed = Vec::with_capacity(self.words().len());
+        self.first_draw = true;
     }
 
     fn is_finished(&self) -> bool {
@@ -84,8 +91,18 @@ impl App {
     }
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+        execute!(io::stdout(), SetCursorStyle::BlinkingBar)?;
+
         while self.state != State::Exit {
-            terminal.draw(|frame| self.draw(frame))?;
+            terminal.draw(|frame| {
+                self.draw(frame);
+                self.first_draw = false;
+            })?;
+
+            if self.state == State::Playing {
+                terminal.show_cursor()?;
+            }
+
             self.handle_events()?;
         }
 
@@ -154,6 +171,10 @@ impl App {
             .block(block)
             .wrap(Wrap { trim: true })
             .render(area, frame.buffer_mut());
+
+        if self.first_draw {
+            frame.set_cursor_position(Position::new(area.x, area.height / 2));
+        }
     }
 
     fn draw(&self, frame: &mut Frame) {
